@@ -16,7 +16,7 @@ def html_extract(url: str):
 
         # First row contains the headers
         header_cells = rows[0].find_all(['th', 'td'])
-        headers = [cell.text.strip() for cell in header_cells]
+        headers = [cell.text.strip() or f"column_{i}" for i, cell in enumerate(header_cells)]
 
         # Remaining rows are data
         table_data = []
