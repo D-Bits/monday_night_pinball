@@ -3,6 +3,48 @@ import pyspark.pipelines as dp
 import requests
 
 
+# Create a list of team initials to iterate over and pass into team_roster_extract
+team_initials = [
+    'ADB',
+    'BAD',
+    'BLK',
+    'CRA',
+    'DTP',
+    'DSV',
+    'DIH',
+    'DRK',
+    'ETB',
+    'FBP',
+    'ICB',
+    'KNR',
+    'KBZ',
+    'RMS',
+    'JMF',
+    'NMC',
+    'NQG',
+    'NLT',
+    'CPO',
+    'PYC',
+    'PGN',
+    'PKT',
+    'PBR',
+    'RTR',
+    'SSD',
+    'SCN',
+    'SHK',
+    'SSS',
+    'SKP',
+    'SWL',
+    'SRF',
+    'TBT',
+    'POW',
+    'DOG',
+    'TTT',
+    'TWC',
+    'TRL',
+    'ZOO'
+]
+
 # Reusable function to scrape HTML tables and load into dataframe
 def html_extract(url: str):
 
@@ -29,9 +71,9 @@ def html_extract(url: str):
 
 
 # Reusable function to scrape meta data for teams
-def team_roster_extract(team_inital: str):
+def team_roster_extract(team_initial: str):
 
-    html_src = requests.get(f"https://mondaynightpinball.com/teams/ADB").content
+    html_src = requests.get(f"https://mondaynightpinball.com/teams/{team_initial}").content
     soup = BeautifulSoup(html_src, "html.parser")
     table = soup.find(id="team_roster")
 
@@ -59,5 +101,4 @@ def team_roster_extract(team_inital: str):
     
 def team_info_extract(team_initial: str):
 
-    pass
     pass
