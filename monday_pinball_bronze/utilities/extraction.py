@@ -70,6 +70,8 @@ venue_initials = {
     "ZTE": "Zoo Tavern",
 }
 
+
+
 # Reusable function to scrape HTML tables and load into dataframe
 def html_extract(url: str):
 
