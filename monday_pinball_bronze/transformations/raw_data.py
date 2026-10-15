@@ -53,7 +53,7 @@ def raw_venue():
 
     df = spark.createDataFrame(
         [(k, v) for k, v in venue_initials.items()],
-        schema="venue_init STRING, venue_name STRING"
+        schema="id SERIAL, venue_init STRING, venue_name STRING"
     )
 
     return df
@@ -70,5 +70,33 @@ def raw_machine():
     df = header_row.unionByName(df)
     # Rename columns
     df = df.withColumnRenamed("AC/DC", "machine_name").withColumnRenamed("ACDC", "machine_abbrv")
+
+    return df
+
+
+@dp.table(name="bronze.raw_venue_machine")
+def raw_venue_machine():
+
+    venue_inits = list(venue_initials.keys())
+
+    def create_df(venue_initial: str):
+
+        data = html_extract(f"https://mondaynightpinball.com/venues/{venue_init}")
+
+        df = spark.createDataFrame(data)
+        header_row = spark.createDataFrame([Row(*df.columns)], df.schema)
+        df = header_row.unionByName(df)
+        df = df.withColumnRenamed(df.columns[0], "machine_name")
+        df = df.withColumn("venue_init", f.lit(venue_initial))
+
+        return df
+
+    dfs = []
+
+    for venue_init in venue_inits:
+        df = create_df(venue_init)
+        dfs.append(df)
+
+    df = reduce(pyspark.sql.dataframe.DataFrame.unionByName, dfs)
 
     return df
