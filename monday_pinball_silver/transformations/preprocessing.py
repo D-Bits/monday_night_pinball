@@ -8,7 +8,7 @@ def venue_preproc():
 
     df = spark.read.table("bronze.raw_venue")
     win_part = Window.partitionBy("venue_init").orderBy("IPR")
-    df = df.withColumn("id", f.dense_rank().over(Window.orderBy("venue_name")))
+    df = df.withColumn("id", f.dense_rank().over(Window.orderBy(df.venue_name)))
     df = df.select([
         "id",
         "venue_name",
@@ -18,59 +18,99 @@ def venue_preproc():
     return df
 
 
-
-
 @dp.table(name="silver.player")
 def player_preproc():
+
+    # Map a venue ID to each team
+    def assign_venue_id(df, team_initial):
+
+        if team_initial == "ADB":
+            df = df.withColumn("venue_id", f.lit(4))
+        elif team_initial == "BAD":
+            df = df.withColumn("venue_id", f.lit(3))
+        elif team_initial == "BLK":
+            df = df.withColumn("venue_id", f.lit(6))
+        elif team_initial == "CRA":
+            df = df.withColumn("venue_id", f.lit(5))
+        elif team_initial == "DTP":
+            df = df.withColumn("venue_id", f.lit(12))
+        elif team_initial == "DSV":
+            df = df.withColumn("venue_id", f.lit(3))
+        elif team_initial == "DIH":
+            df = df.withColumn("venue_id", f.lit(17))
+        elif team_initial == "DRK":
+            df = df.withColumn("venue_id", f.lit(15))
+        elif team_initial == "ETB":
+            df = df.withColumn("venue_id", f.lit(20))
+        elif team_initial == "FBP":
+            df = df.withColumn("venue_id", f.lit(12))
+        elif team_initial == "ICB":
+            df = df.withColumn("venue_id", f.lit(4))
+        elif team_initial == "KNR":
+            df = df.withColumn("venue_id", f.lit(9))
+        elif team_initial == "KBZ":
+            df = df.withColumn("venue_id", f.lit(13))
+        elif team_initial == "RMS":
+            df = df.withColumn("venue_id", f.lit(18))
+        elif team_initial == "JMF":
+            df = df.withColumn("venue_id", f.lit(12))
+        elif team_initial == "NMC":
+            df = df.withColumn("venue_id", f.lit(19))
+        elif team_initial == "NQG":
+            df = df.withColumn("venue_id", f.lit(10))
+        elif team_initial == "NLT":
+            df = df.withColumn("venue_id", f.lit(14))
+        elif team_initial == "CPO":
+            df = df.withColumn("venue_id", f.lit(5))
+        elif team_initial == "PYC":
+            df = df.withColumn("venue_id", f.lit(11))
+        elif team_initial == "PGN":
+            df = df.withColumn("venue_id", f.lit(2))
+        elif team_initial == "PKT":
+            df = df.withColumn("venue_id", f.lit(7))
+        elif team_initial == "PBR":
+            df = df.withColumn("venue_id", f.lit(3))
+        elif team_initial == "RTR":
+            df = df.withColumn("venue_id", f.lit(14))
+        elif team_initial == "SSD":
+            df = df.withColumn("venue_id", f.lit(6))
+        elif team_initial == "SCN":
+            df = df.withColumn("venue_id", f.lit(9))
+        elif team_initial == "SHK":
+            df = df.withColumn("venue_id", f.lit(21))
+        elif team_initial == "SSS":
+            df = df.withColumn("venue_id", f.lit(17))
+        elif team_initial == "SKP":
+            df = df.withColumn("venue_id", f.lit(13))
+        elif team_initial == "SWL":
+            df = df.withColumn("venue_id", f.lit(2))
+        elif team_initial == "SRF":
+            df = df.withColumn("venue_id", f.lit(8))
+        elif team_initial == "TBT":
+            df = df.withColumn("venue_id", f.lit(1))
+        elif team_initial == "POW":
+            df = df.withColumn("venue_id", f.lit(11))
+        elif team_initial == "DOG":
+            df = df.withColumn("venue_id", f.lit(10))
+        elif team_initial == "TTT":
+            df = df.withColumn("venue_id", f.lit(16))
+        elif team_initial == "TWC":
+            df = df.withColumn("venue_id", f.lit(9))
+        elif team_initial == "TRL":
+            df = df.withColumn("venue_id", f.lit(1))
+        elif team_initial == "ZOO":
+            df = df.withColumn("venue_id", f.lit(22))
+        else:
+            pass
+
+        return df
 
     df = spark.read.table("monday_pinball.bronze.raw_team_roster")
     # Assign each player a team ID
     win_part = Window.partitionBy("team_name").orderBy("IPR")
     df = df.withColumn("id", f.monotonically_increasing_id())
 
-    df = df.withColumn("team_id", f.dense_rank().over(Window.orderBy("team_name")))
-
-    # Map a venue ID to each team
-    df = df.withColumn("venue_id",
-        f.when(f.col("team_inital") == "ADB", f.lit(4))
-        .when(f.col("team_inital") == "BAD", f.lit(3))
-        .when(f.col("team_inital") == "BLK", f.lit(6))
-        .when(f.col("team_inital") == "CRA", f.lit(5))
-        .when(f.col("team_inital") == "DTP", f.lit(12))
-        .when(f.col("team_inital") == "DSV", f.lit(3))
-        .when(f.col("team_inital") == "DIH", f.lit(17))
-        .when(f.col("team_inital") == "DRK", f.lit(15))
-        .when(f.col("team_inital") == "ETB", f.lit(20))
-        .when(f.col("team_inital") == "FBP", f.lit(12))
-        .when(f.col("team_inital") == "ICB", f.lit(4))
-        .when(f.col("team_inital") == "KNR", f.lit(9))
-        .when(f.col("team_inital") == "KBZ", f.lit(13))
-        .when(f.col("team_inital") == "RMS", f.lit(18))
-        .when(f.col("team_inital") == "JMF", f.lit(12))
-        .when(f.col("team_inital") == "NMC", f.lit(19))
-        .when(f.col("team_inital") == "NQG", f.lit(10))
-        .when(f.col("team_inital") == "NLT", f.lit(14))
-        .when(f.col("team_inital") == "CPO", f.lit(5))
-        .when(f.col("team_inital") == "PYC", f.lit(11))
-        .when(f.col("team_inital") == "PGN", f.lit(2))
-        .when(f.col("team_inital") == "PKT", f.lit(7))
-        .when(f.col("team_inital") == "PBR", f.lit(3))
-        .when(f.col("team_inital") == "RTR", f.lit(14))
-        .when(f.col("team_inital") == "SSD", f.lit(6))
-        .when(f.col("team_inital") == "SCN", f.lit(9))
-        .when(f.col("team_inital") == "SHK", f.lit(21))
-        .when(f.col("team_inital") == "SSS", f.lit(17))
-        .when(f.col("team_inital") == "SKP", f.lit(13))
-        .when(f.col("team_inital") == "SWL", f.lit(2))
-        .when(f.col("team_inital") == "SRF", f.lit(8))
-        .when(f.col("team_inital") == "TBT", f.lit(1))
-        .when(f.col("team_inital") == "POW", f.lit(11))
-        .when(f.col("team_inital") == "DOG", f.lit(10))
-        .when(f.col("team_inital") == "TTT", f.lit(16))
-        .when(f.col("team_inital") == "TWC", f.lit(9))
-        .when(f.col("team_inital") == "TRL", f.lit(1))
-        .when(f.col("team_inital") == "ZOO", f.lit(22))
-    )
+    df = df.withColumn("team_id", f.dense_rank().over(Window.orderBy(df.team_name)))
 
     # Rename columns
     df = df.withColumnRenamed("IPR", "ipr")
@@ -82,7 +122,6 @@ def player_preproc():
     df = df.select([
         "id",
         "team_id",
-        "venue_id",
         "player_name",
         "ipr",
         "m",
@@ -101,7 +140,7 @@ def team_preproc():
     win_part = Window.partitionBy("team_name").orderBy("IPR")
     df = df.withColumn("id", f.monotonically_increasing_id())
 
-    df = df.withColumn("team_id", f.dense_rank().over(Window.orderBy("team_name")))
+    df = df.withColumn("team_id", f.dense_rank().over(Window.orderBy(df.team_name)))
     # Drop duplicate team ids
     df = df.drop_duplicates(["team_id"])
     # Drop unnecessary fields
@@ -110,6 +149,69 @@ def team_preproc():
         "team_id",
         "team_name",
         "team_inital"
+    ])
+
+    return df
+
+
+@dp.table(name="silver.machine")
+def machine_preproc():
+
+    df = spark.read.table("bronze.raw_venue_machine")
+    df = df.drop_duplicates(["machine_name"])
+    win_part = Window.partitionBy("machine_name").orderBy("machine_name")
+    df = df.withColumn("id", f.dense_rank().over(Window.orderBy(df.machine_name)))
+    df = df.select([
+        "id",
+        "machine_name"
+    ])
+
+    return df
+
+
+# Create a linking table between venue and machine
+@dp.table(name="silver.machine_venue_id")
+def machine_venue_id():
+
+    df = spark.read.table("monday_pinball.bronze.raw_venue_machine")
+    # Assign venue ids
+    df = df.withColumn("venue_id",
+        f.when(f.col("venue_init") == "T4B", f.lit(1))
+        .when(f.col("venue_init") == "8BT", f.lit(2))
+        .when(f.col("venue_init") == "AAB", f.lit(3))
+        .when(f.col("venue_init") == "ADM", f.lit(4))
+        .when(f.col("venue_init") == "ANC", f.lit(5))
+        .when(f.col("venue_init") == "BSS", f.lit(6))
+        .when(f.col("venue_init") == "COP", f.lit(7))
+        .when(f.col("venue_init") == "GRY", f.lit(8))
+        .when(f.col("venue_init") == "GPA", f.lit(9))
+        .when(f.col("venue_init") == "HND", f.lit(10))
+        .when(f.col("venue_init") == "IBX", f.lit(11))
+        .when(f.col("venue_init") == "JUP", f.lit(12))
+        .when(f.col("venue_init") == "KRA", f.lit(13))
+        .when(f.col("venue_init") == "OLF", f.lit(14))
+        .when(f.col("venue_init") == "RSW", f.lit(15))
+        .when(f.col("venue_init") == "STN", f.lit(16))
+        .when(f.col("venue_init") == "SHR", f.lit(17))
+        .when(f.col("venue_init") == "TLT", f.lit(18))
+        .when(f.col("venue_init") == "TWP", f.lit(19))
+        .when(f.col("venue_init") == "TDN", f.lit(20))
+        .when(f.col("venue_init") == "WAT", f.lit(21))
+        .when(f.col("venue_init") == "ZTE", f.lit(22))
+    )
+
+    # Assign machine ids
+    df = df.dropDuplicates(["machine_name"])
+
+    df = df.sort(f.asc("machine_name"))
+    df = df.withColumn("machine_id", f.dense_rank().over(Window.orderBy(df.machine_name)))
+
+    # Add an id for each record
+    df = df.withColumn("id", f.monotonically_increasing_id())
+    df = df.select([
+        "id",
+        "venue_id",
+        "machine_id"
     ])
 
     return df
