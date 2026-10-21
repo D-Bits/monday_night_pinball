@@ -1,4 +1,5 @@
 from utilities.extraction import html_extract, team_roster_extract, team_initials, venue_initials
+from utilities.validation import bronze_validations
 from bs4 import BeautifulSoup
 from functools import reduce
 from pyspark.sql import Row
@@ -9,7 +10,8 @@ import pyspark
 import requests
 
 
-@dp.table(name="bronze.raw_standingsI")
+@dp.table(name="bronze.raw_standings")
+@dp.expect_all_or_fail(bronze_validations["raw_standings"])
 def raw_standings():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/standings"))
@@ -18,6 +20,7 @@ def raw_standings():
 
 
 @dp.table(name="bronze.raw_stats")
+@dp.expect_all_or_fail(bronze_validations["raw_stats"])
 def raw_stats():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/stats"))
@@ -26,6 +29,7 @@ def raw_stats():
 
 
 @dp.table(name="bronze.raw_team_roster")
+@dp.expect_all_or_fail(bronze_validations["raw_team_roster"])
 def raw_team_roster():
 
     def create_df(team_initial: str, team_name: str):
@@ -49,17 +53,19 @@ def raw_team_roster():
 
 
 @dp.table(name="bronze.raw_venue")
+@dp.expect_all_or_fail(bronze_validations["raw_venue"])
 def raw_venue():
 
     df = spark.createDataFrame(
-        [(k, v) for k, v in venue_initials.items()],
-        schema="id SERIAL, venue_init STRING, venue_name STRING"
+        [(i, k, v) for i, (k, v) in enumerate(venue_initials.items(), start=1)],
+        schema="id INT, venue_init STRING, venue_name STRING"
     )
 
     return df
 
 
 @dp.table(name="bronze.raw_machine")
+@dp.expect_all_or_fail(bronze_validations["raw_machine"])
 def raw_machine():
 
     data = html_extract("https://mondaynightpinball.com/machines")
@@ -75,6 +81,7 @@ def raw_machine():
 
 
 @dp.table(name="bronze.raw_venue_machine")
+@dp.expect_all_or_fail(bronze_validations["raw_venue_machine"])
 def raw_venue_machine():
 
     venue_inits = list(venue_initials.keys())
