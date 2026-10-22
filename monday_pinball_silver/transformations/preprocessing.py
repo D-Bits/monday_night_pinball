@@ -1,3 +1,4 @@
+from utilities.validation import silver_validations
 from pyspark.sql.window import Window
 import pyspark.sql.functions as f
 import pyspark.pipelines as dp
@@ -118,6 +119,8 @@ def player_preproc():
     df = df.withColumnRenamed("POPS", "pops")
     df = df.withColumnRenamed("PPM", "ppm")
     df = df.withColumnRenamed("Roster", "player_name")
+    # Type casting
+    df = df.withColumn(df.ipr, )
 
     df = df.select([
         "id",

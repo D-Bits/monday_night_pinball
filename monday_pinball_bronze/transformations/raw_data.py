@@ -9,7 +9,7 @@ import pyspark
 import requests
 
 
-@dp.table(name="bronze.raw_standingsI")
+@dp.table(name="bronze.raw_standings")
 def raw_standings():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/standings"))
