@@ -1,4 +1,5 @@
 from utilities.extraction import html_extract, team_roster_extract, team_initials, venue_initials
+from utilities.validation import bronze_validations
 from bs4 import BeautifulSoup
 from functools import reduce
 from pyspark.sql import Row
@@ -9,7 +10,8 @@ import pyspark
 import requests
 
 
-@dp.table(name="bronze.raw_standingsI")
+@dp.table(name="bronze.raw_standings")
+@dp.expect_all_or_fail(bronze_validations['raw_standings'])
 def raw_standings():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/standings"))
@@ -18,6 +20,7 @@ def raw_standings():
 
 
 @dp.table(name="bronze.raw_stats")
+@dp.expect_all_or_fail(bronze_validations['raw_stats'])
 def raw_stats():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/stats"))
@@ -26,6 +29,7 @@ def raw_stats():
 
 
 @dp.table(name="bronze.raw_team_roster")
+@dp.expect_all_or_fail(bronze_validations['raw_team_roster'])
 def raw_team_roster():
 
     def create_df(team_initial: str, team_name: str):
@@ -49,6 +53,7 @@ def raw_team_roster():
 
 
 @dp.table(name="bronze.raw_venue")
+@dp.expect_all_or_fail(bronze_validations["raw_venue"])
 def raw_venue():
 
     df = spark.createDataFrame(
@@ -60,6 +65,7 @@ def raw_venue():
 
 
 @dp.table(name="bronze.raw_machine")
+@dp.expect_all_or_fail(bronze_validations["raw_machine"])
 def raw_machine():
 
     data = html_extract("https://mondaynightpinball.com/machines")
@@ -70,5 +76,34 @@ def raw_machine():
     df = header_row.unionByName(df)
     # Rename columns
     df = df.withColumnRenamed("AC/DC", "machine_name").withColumnRenamed("ACDC", "machine_abbrv")
+
+    return df
+
+
+@dp.table(name="bronze.raw_venue_machine")
+@dp.expect_all_or_fail(bronze_validations["raw_venue_machine"])
+def raw_venue_machine():
+
+    venue_inits = list(venue_initials.keys())
+
+    def create_df(venue_initial: str):
+
+        data = html_extract(f"https://mondaynightpinball.com/venues/{venue_init}")
+
+        df = spark.createDataFrame(data)
+        header_row = spark.createDataFrame([Row(*df.columns)], df.schema)
+        df = header_row.unionByName(df)
+        df = df.withColumnRenamed(df.columns[0], "machine_name")
+        df = df.withColumn("venue_init", f.lit(venue_initial))
+
+        return df
+
+    dfs = []
+
+    for venue_init in venue_inits:
+        df = create_df(venue_init)
+        dfs.append(df)
+
+    df = reduce(pyspark.sql.dataframe.DataFrame.unionByName, dfs)
 
     return df
