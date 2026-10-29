@@ -12,7 +12,7 @@ import requests
 
 
 @dp.table(name="bronze.raw_standings")
-@dp.expect_or_fail(bronze_validations["raw_standings"])
+@dp.expect_all_or_fail(bronze_validations["raw_standings"])
 def raw_standings():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/standings"))
@@ -22,7 +22,7 @@ def raw_standings():
 
 
 @dp.table(name="bronze.raw_stats")
-@dp.expect_or_fail(bronze_validations["raw_stats"])
+@dp.expect_all_or_fail(bronze_validations["raw_stats"])
 def raw_stats():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/stats"))
@@ -31,7 +31,7 @@ def raw_stats():
 
 
 @dp.table(name="bronze.raw_team_roster")
-@dp.expect_or_fail(bronze_validations["raw_team_roster"])
+@dp.expect_all_or_fail(bronze_validations["raw_team_roster"])
 def raw_team_roster():
 
     def create_df(team_initial: str, team_name: str):
@@ -56,7 +56,7 @@ def raw_team_roster():
 
 
 @dp.table(name="bronze.raw_venue")
-@dp.expect_or_fail(bronze_validations["raw_venue"])
+@dp.expect_all_or_fail(bronze_validations["raw_venue"])
 def raw_venue():
 
     df = spark.createDataFrame(
@@ -69,7 +69,7 @@ def raw_venue():
 
 
 @dp.table(name="bronze.raw_machine")
-@dp.expect_or_fail(bronze_validations["raw_machine"])
+@dp.expect_all_or_fail(bronze_validations["raw_machine"])
 def raw_machine():
 
     data = html_extract("https://mondaynightpinball.com/machines")
@@ -86,7 +86,7 @@ def raw_machine():
 
 
 @dp.table(name="bronze.raw_venue_machine")
-@dp.expect_or_fail(bronze_validations["raw_venue_machine"])
+@dp.expect_all_or_fail(bronze_validations["raw_venue_machine"])
 def raw_venue_machine():
 
     venue_inits = list(venue_initials.keys())
