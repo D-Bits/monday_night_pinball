@@ -120,7 +120,12 @@ def player_preproc():
     df = df.withColumnRenamed("PPM", "ppm")
     df = df.withColumnRenamed("Roster", "player_name")
     # Type casting
-    df = df.withColumn(df.ipr, )
+    int_cols = ['ipr', 'm']
+    float_cols = ['pops', 'ppm']
+    for x in int_cols:
+        df = df.withColumn(x, f.col(x).cast('int'))
+    for x in float_cols:
+        df = df.withColumn(x, f.col(x).cast('float'))
 
     df = df.select([
         "id",

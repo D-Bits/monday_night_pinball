@@ -1,4 +1,5 @@
 from utilities.extraction import html_extract, team_roster_extract, team_initials, venue_initials
+from utilities.validation import bronze_validations
 from bs4 import BeautifulSoup
 from functools import reduce
 from pyspark.sql import Row
@@ -6,18 +7,22 @@ import pyspark.sql.functions as f
 import pyspark.pipelines as dp
 import datetime
 import pyspark
+import datetime
 import requests
 
 
 @dp.table(name="bronze.raw_standings")
+@dp.expect_or_fail(bronze_validations["raw_standings"])
 def raw_standings():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/standings"))
+    df = df.withColumn("addded", f.current_date())
 
     return df
 
 
 @dp.table(name="bronze.raw_stats")
+@dp.expect_or_fail(bronze_validations["raw_stats"])
 def raw_stats():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/stats"))
@@ -26,6 +31,7 @@ def raw_stats():
 
 
 @dp.table(name="bronze.raw_team_roster")
+@dp.expect_or_fail(bronze_validations["raw_team_roster"])
 def raw_team_roster():
 
     def create_df(team_initial: str, team_name: str):
@@ -33,6 +39,7 @@ def raw_team_roster():
         df = spark.createDataFrame(team_roster_extract(team_initial))
         df = df.withColumn("team_inital", f.lit(team_initial))
         df = df.withColumn("team_name", f.lit(team_name))
+        df = df.withColumn("addded", f.current_date())
 
         return df
 
@@ -49,17 +56,20 @@ def raw_team_roster():
 
 
 @dp.table(name="bronze.raw_venue")
+@dp.expect_or_fail(bronze_validations["raw_venue"])
 def raw_venue():
 
     df = spark.createDataFrame(
         [(k, v) for k, v in venue_initials.items()],
-        schema="id SERIAL, venue_init STRING, venue_name STRING"
+        schema="venue_init STRING, venue_name STRING"
     )
+    df = df.withColumn("addded", f.current_date())
 
     return df
 
 
 @dp.table(name="bronze.raw_machine")
+@dp.expect_or_fail(bronze_validations["raw_machine"])
 def raw_machine():
 
     data = html_extract("https://mondaynightpinball.com/machines")
@@ -70,11 +80,13 @@ def raw_machine():
     df = header_row.unionByName(df)
     # Rename columns
     df = df.withColumnRenamed("AC/DC", "machine_name").withColumnRenamed("ACDC", "machine_abbrv")
+    df = df.withColumn("addded", f.current_date())
 
     return df
 
 
 @dp.table(name="bronze.raw_venue_machine")
+@dp.expect_or_fail(bronze_validations["raw_venue_machine"])
 def raw_venue_machine():
 
     venue_inits = list(venue_initials.keys())
@@ -88,6 +100,7 @@ def raw_venue_machine():
         df = header_row.unionByName(df)
         df = df.withColumnRenamed(df.columns[0], "machine_name")
         df = df.withColumn("venue_init", f.lit(venue_initial))
+        df = df.withColumn("addded", f.current_date())
 
         return df
 

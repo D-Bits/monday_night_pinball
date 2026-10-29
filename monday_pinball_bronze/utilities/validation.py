@@ -2,7 +2,7 @@
 
 # Row-level expectations per bronze table. Each expression must reference
 # a column that exists in that table; the tables share no common column.
-silver_validations = {
+bronze_validations = {
     "raw_standings": {
         "valid_rank": "`#` IS NOT NULL",
     },
