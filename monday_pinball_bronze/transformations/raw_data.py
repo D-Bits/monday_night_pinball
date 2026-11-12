@@ -16,7 +16,7 @@ import requests
 def raw_standings():
 
     df = spark.createDataFrame(html_extract("https://mondaynightpinball.com/standings"))
-    df = df.withColumn("addded", f.current_date())
+    df = df.withColumn("added", f.current_date())
 
     return df
 
@@ -39,7 +39,7 @@ def raw_team_roster():
         df = spark.createDataFrame(team_roster_extract(team_initial))
         df = df.withColumn("team_inital", f.lit(team_initial))
         df = df.withColumn("team_name", f.lit(team_name))
-        df = df.withColumn("addded", f.current_date())
+        df = df.withColumn("added", f.current_date())
 
         return df
 
@@ -63,7 +63,7 @@ def raw_venue():
         [(k, v) for k, v in venue_initials.items()],
         schema="venue_init STRING, venue_name STRING"
     )
-    df = df.withColumn("addded", f.current_date())
+    df = df.withColumn("added", f.current_date())
 
     return df
 
@@ -80,7 +80,7 @@ def raw_machine():
     df = header_row.unionByName(df)
     # Rename columns
     df = df.withColumnRenamed("AC/DC", "machine_name").withColumnRenamed("ACDC", "machine_abbrv")
-    df = df.withColumn("addded", f.current_date())
+    df = df.withColumn("added", f.current_date())
 
     return df
 
@@ -100,7 +100,7 @@ def raw_venue_machine():
         df = header_row.unionByName(df)
         df = df.withColumnRenamed(df.columns[0], "machine_name")
         df = df.withColumn("venue_init", f.lit(venue_initial))
-        df = df.withColumn("addded", f.current_date())
+        df = df.withColumn("added", f.current_date())
 
         return df
 

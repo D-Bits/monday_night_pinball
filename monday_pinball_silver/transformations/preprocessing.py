@@ -13,7 +13,8 @@ def venue_preproc():
     df = df.select([
         "id",
         "venue_name",
-        "venue_init"
+        "venue_init",
+        "added",
     ])
 
     return df
@@ -134,7 +135,8 @@ def player_preproc():
         "ipr",
         "m",
         "pops",
-        "ppm"
+        "ppm",
+        "added",
     ])
 
     return df
@@ -156,8 +158,31 @@ def team_preproc():
         "id",
         "team_id",
         "team_name",
-        "team_inital"
+        "team_inital",
+        "added",
     ])
+
+    return df
+
+
+@dp.table(name="silver.standings")
+def standings_preproc():
+
+    df = spark.read.table("bronze.raw_standings")
+
+    df = df.withColumnRenamed("#", "team_ranking")
+    df = df.withColumnRenamed("L", "losses")
+    df = df.withColumnRenamed("W", "wins")
+    df = df.withColumnRenamed("T", "ties")
+    df = df.withColumnRenamed("POPS", "pops")
+    df = df.withColumnRenamed("Team", "team")
+
+    int_cols = ["ties", "wins", "losses", "team_ranking"]
+    float_cols = ["pops"]
+    for x in int_cols:
+        df = df.withColumn(x, f.col(x).cast('int'))
+    for x in float_cols:
+        df = df.withColumn(x, f.col(x).cast('float'))
 
     return df
 
@@ -171,7 +196,8 @@ def machine_preproc():
     df = df.withColumn("id", f.dense_rank().over(Window.orderBy(df.machine_name)))
     df = df.select([
         "id",
-        "machine_name"
+        "machine_name",
+        "added",
     ])
 
     return df
@@ -219,7 +245,8 @@ def machine_venue_id():
     df = df.select([
         "id",
         "venue_id",
-        "machine_id"
+        "machine_id",
+        "added",
     ])
 
     return df

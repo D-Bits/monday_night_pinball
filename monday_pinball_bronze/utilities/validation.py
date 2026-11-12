@@ -20,5 +20,5 @@ bronze_validations = {
     },
     "raw_venue_machine": {
         "valid_machine": "machine_name IS NOT NULL"
-    }, 
+    },
 }
